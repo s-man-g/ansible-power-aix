@@ -10,13 +10,14 @@ This is outside the scope in this guide, find more info at LINK.
 Beginners Guide
 
 
-Prerequirements for this guide:
-   * A Controller Node to install ansilbe on.
-   * A Managed Node(s) to apply the <NEED TO CHOOSE WHICH PLAYBOOK TO RUN>
+Items needed for this guide: 
 
+* A Controller Node to install ansilbe on.
+
+* A Managed Node(s) to apply the <NEED TO CHOOSE WHICH PLAYBOOK TO RUN>
+  
    .. warning::
-      There are several os architectures/flavors to choose from when installing ansible to your controller node. AIX is not supported. More importantly its not an ideal choice for starting out.
-      not an ideal choice for new For this guide we will use Red Hat Enterprise Linux 7.                                        This guide has also been tested with CentOS 7. Check this link for possible controller node options: 			https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-rhel-centos-or-fedora  
+      There are several os architectures/flavors to choose from when installing ansible to your controller node. AIX is not supported. It also is not an ideal choice for starting out. For this guide we will use Red Hat Enterprise Linux 7.                                        This guide has also been tested with CentOS 7. Check this link for possible controller node options: 			https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-rhel-centos-or-fedora  
       
 Install Ansible with:
 
