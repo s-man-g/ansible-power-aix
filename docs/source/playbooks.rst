@@ -5,7 +5,7 @@
 Playbooks
 =========
 
-The sample playbooks that are **included** in the **IBM POWER AIX collection**
+The sample playbooks that are **included** in the **IBM Power Systems AIX collection**
 demonstrate how to use the collection content.
 
 Playbook Documentation
@@ -15,14 +15,14 @@ An `Ansible playbook`_ consists of organized instructions that define work for
 a managed node (host) to be managed with Ansible.
 
 A `playbooks directory`_ that contains a sample playbook is included in the
-**IBM POWER AIX collection**. The sample playbook can be run with the
+**IBM Power Systems AIX collection**. The sample playbook can be run with the
 ``ansible-playbook`` command with some modification to the **inventory**
 and **group_vars**.
 
 You can find the playbook content that is included with the collection in the
 same location where the collection is installed. For more information, refer to
 the `installation documentation`_. In the following examples, this document will
-refer to the installation path as ``~/.ansible/collections/ibm/power_aix``.
+refer to the installation path as ``~/.ansible/collections/ansible_collections/ibm/power_aix``.
 
 .. _Ansible playbook:
    https://docs.ansible.com/ansible/latest/user_guide/playbooks_intro.html#playbooks-intro
@@ -113,12 +113,15 @@ and `nimserver.yml`_.
 
 
 
-Run the playbook
-----------------
+Run the playbooks
+-----------------
+
+The sample playbooks must be run from the `playbooks directory`_ of the installed
+collection: ``~/.ansible/collections/ansible_collections/ibm/power_aix/playbooks/``.
 
 Access the sample Ansible playbook and ensure that you are within the collection
 playbooks directory where the sample files are included:
-``~/.ansible/collections/ibm/power_aix/playbooks/``.
+``~/.ansible/collections/ansible_collections/ibm/power_aix/playbooks/``.
 
 Use the Ansible command ``ansible-playbook`` to run the sample playbooks.  The
 command syntax is ``ansible-playbook -i <inventory> <playbook>``; for example,
@@ -141,9 +144,10 @@ user's password each time a playbook is run; for example,
 Optionally, you can configure the console logging verbosity during playbook
 execution. This is helpful in situations where communication is failing and
 you want to obtain more details. To adjust the logging verbosity, append more
-letter `v`'s; for example, `-v`, `-vv`, `-vvv`, or `-vvvv`. Each letter `v`
-increases logging verbosity similar to traditional logging levels INFO, WARN,
-ERROR, DEBUG.
+letter `v`'s; for example, `-v`, `-vv`, `-vvv`, or `-vvvv`.
+
+Each letter `v` increases logging verbosity similar to traditional logging
+levels INFO, WARN, ERROR, DEBUG.
 
 .. note::
    It is a good practice to review the playbook samples before executing them.
@@ -155,6 +159,49 @@ ERROR, DEBUG.
    Review the playbook notes sections for additional details and
    configuration.
 
+.. _playbooks directory:
+   https://github.com/IBM/ansible-power-aix/tree/dev-collection/playbooks
+
 .. _ask-pass documentation:
    https://linux.die.net/man/1/sshpass
+
+
+
+Log and debug
+-------------
+
+The **IBM Power Systems AIX collection** uses the standard Ansible log system
+that is using the syslog subsystem on the managed nodes.
+
+To activate AIX syslog you can update the configuration file `/etc/syslog.conf`
+with a selector `user.info` (or `user.debug` for more details) such as:
+
+.. code-block:: sh
+
+   $ vi /etc/syslog.conf
+   user.info /var/log/syslog.user.info rotate size 1m files 4 compress
+
+and restarting syslogd subsystem and look for Ansible logs:
+
+.. code-block:: sh
+
+   $ >/var/log/syslog.user.info
+   $ refresh -s syslogd
+
+   $ grep ansible /var/log/syslog.user.info
+   May  6 03:28:27 nimmaster user:info ansible-nim: Invoked with resource=None force=False description=None script=damien_script lpp_source=None action=script asynchronous=True location=None device=None group=None operation=None targets=['nimclient01']
+   May  6 03:28:27 nimmaster user:info ansible-nim: *** START ***
+   ...
+
+To see the full debug log messages you should set the selector field to
+`user.debug` and run the playbook with the environment variable
+`ANSIBLE_DEBUG=1`
+
+.. code-block:: sh
+
+   $ vi /etc/syslog.conf
+   user.debug /var/log/syslog.user.debug rotate size 1m files 4 compress
+   $ >/var/log/syslog.user.debug
+   $ refresh -s syslogd
+   $ ANSIBLE_DEBUG=1 ansible-playbook -M plugins/modules ./demo_nim.yml -vvv
 

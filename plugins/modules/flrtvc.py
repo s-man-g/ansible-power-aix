@@ -112,6 +112,11 @@ EXAMPLES = r'''
 '''
 
 RETURN = r'''
+msg:
+    description: The execution message.
+    returned: always
+    type: str
+    sample: 'FLRTVC completed successfully'
 meta:
     description: Detailed information on the module execution.
     returned: always
@@ -197,7 +202,7 @@ meta:
                 ...,
             ],
             "4.1.reject": [
-                "102p_fix: prerequisite openssl.base levels do not match: 1.0.2.1600 < 1.0.2.1500 < 1.0.2.1600",
+                "102p_fix: prerequisite openssl.base levels do not satisfy condition string: 1.0.2.1600 =< 1.0.2.1500 =< 1.0.2.1600",
                 ...,
                 "IJ12983m2a: locked by previous efix to install",
                 ...,
@@ -601,7 +606,7 @@ def check_epkgs(epkg_list, lpps, efixes):
             minlvl_i = list(map(int, epkg['prereq'][prereq]['minlvl'].split('.')))
             maxlvl_i = list(map(int, epkg['prereq'][prereq]['maxlvl'].split('.')))
             if lpps[prereq]['int'] < minlvl_i or lpps[prereq]['int'] > maxlvl_i:
-                epkg['reject'] = '{0}: prerequisite {1} levels do not match: {2} < {3} < {4}'\
+                epkg['reject'] = '{0}: prerequisite {1} levels do not satisfy condition string: {2} =< {3} =< {4}'\
                                  .format(os.path.basename(epkg['path']),
                                          prereq,
                                          epkg['prereq'][prereq]['minlvl'],
@@ -691,7 +696,19 @@ def parse_lpps_info():
                 continue
             lpps_lvl[mylist[1]] = {'str': mylist[2]}
             mylist[2] = re.sub(r'-', '.', mylist[2])
-            lpps_lvl[mylist[1]]['int'] = list(map(int, mylist[2].split('.')))
+
+            lpps_lvl[mylist[1]]['int'] = []
+            for version in mylist[2].split('.'):
+                match_key = re.match(r"^(\d+)(\D+\S*)?$", version)
+                if match_key:
+                    lpps_lvl[mylist[1]]['int'].append(int(match_key.group(1)))
+                    if match_key.group(2):
+                        module.log('file {0}: got version "{1}", ignoring "{2}"'.format(lslpp_file, mylist[2], match_key.group(2)))
+                else:
+                    msg = 'file {0} is malformed'.format(lslpp_file)
+                    module.log('{0}: got version: "{1}"'.format(msg, version))
+                    results['meta']['messages'].append(msg)
+                    continue
 
     return lpps_lvl
 
