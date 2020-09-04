@@ -1,13 +1,12 @@
-IBM POWER AIX Collection for Ansible
-=====================================
+IBM Power Systems AIX Collection for Ansible
+============================================
 
-The **IBM POWER AIX collection** provides modules that can be used to manage configurations and
+The **IBM Power Systems AIX collection** provides modules that can be used to manage configurations and
 deployments of Power AIX systems. The collection content helps to include workloads on
-Power platforms as part of an enterprise automation strategy through the Red Hat Ansible
-Automation Platform ecosystem.
+Power platforms as part of an enterprise automation strategy through the Ansible ecosystem.
 
-Red Hat Ansible Content for IBM Power
-======================================
+Ansible Content for IBM Power Systems
+=====================================
 
 IBM Power Systems is a family of enterprise servers that helps transform your organization
 by delivering industry leading resilience, scalability and accelerated performance for the
@@ -15,22 +14,24 @@ most sensitive, mission critical workloads and next-generation AI and edge solut
 Power platform also leverages open source technologies that enable you to run these
 workloads in a hybrid cloud environment with consistent tools, processes and skills.
 
-IBM POWER AIX collection, as part of the broader offering
-**Red Hat® Ansible Content for IBM Power**, will be available on both,
-Galaxy as community supported and Automation Hub with enterprise support.
+IBM Power Systems AIX collection, as part of the broader offering of
+**Ansible Content for IBM Power Systems**, is available from Ansible Galaxy and has
+community support.
 
 Getting Started Articles
 ========================
 Check out the reference materials below if you are new to Ansible for AIX.
 
 https://ibm.biz/ansible-aix
+
 https://ibm.biz/ansible-for-power
+
 https://ibm.biz/ansible-power-trailer
 
 Features
 ========
 
-The **IBM POWER AIX collection** includes `modules`_ and `sample playbooks`_
+The **IBM Power Systems AIX collection** includes `modules`_ and `sample playbooks`_
 that help to automate tasks on Power AIX systems.
 
 .. _modules:
@@ -63,15 +64,36 @@ This Ansible collection is maintained by the IBM Power AIX development team.
    :hidden:
 
    installation
-   requirements
    quickstart
 
 .. toctree::
    :maxdepth: 3
-   :caption: Reference
+   :caption: References
    :hidden:
 
    modules
    playbooks
+   roles
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Community Guides
+   :hidden:
+
+   community_guides
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Requirements
+   :hidden:
+
+   requirements
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Appendices
+   :hidden:
+
+   release_notes
 
 

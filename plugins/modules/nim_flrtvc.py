@@ -124,6 +124,19 @@ EXAMPLES = r'''
 '''
 
 RETURN = r'''
+msg:
+    description: Status information.
+    returned: always
+    type: str
+    sample: 'exit on download only'
+status:
+    description:
+    - Status for each target. It can be empty, SUCCESS or FAILURE.
+    - If I(download_only=True), refer to C(meta[<target>][message]) and
+      C(meta[<target>][4.1.reject]) for error checking.
+    returned: always
+    type: dict
+    elements: str
 meta:
     description: Detailed information on the module execution.
     returned: always
@@ -225,7 +238,7 @@ meta:
                     ...,
                 ],
                 "4.1.reject": [
-                    "102p_fix: prerequisite openssl.base levels do not match: 1.0.2.1600 < 1.0.2.1500 < 1.0.2.1600",
+                    "102p_fix: prerequisite openssl.base levels do not satisfy condition string: 1.0.2.1600 =< 1.0.2.1500 =< 1.0.2.1600",
                     ...,
                     "IJ12983m2a: locked by previous efix to install",
                     ...,
@@ -656,7 +669,7 @@ def check_epkgs(module, output, machine, epkg_list, lpps, efixes):
             minlvl_i = list(map(int, epkg['prereq'][prereq]['minlvl'].split('.')))
             maxlvl_i = list(map(int, epkg['prereq'][prereq]['maxlvl'].split('.')))
             if lpps[prereq]['int'] < minlvl_i or lpps[prereq]['int'] > maxlvl_i:
-                epkg['reject'] = '{0}: prerequisite {1} levels do not match: {2} < {3} < {4}'\
+                epkg['reject'] = '{0}: prerequisite {1} levels do not satisfy condition string: {2} =< {3} =< {4}'\
                                  .format(os.path.basename(epkg['path']),
                                          prereq,
                                          epkg['prereq'][prereq]['minlvl'],
@@ -748,7 +761,19 @@ def parse_lpps_info(module, output, machine):
                 continue
             lpps_lvl[mylist[1]] = {'str': mylist[2]}
             mylist[2] = re.sub(r'-', '.', mylist[2])
-            lpps_lvl[mylist[1]]['int'] = list(map(int, mylist[2].split('.')))
+
+            lpps_lvl[mylist[1]]['int'] = []
+            for version in mylist[2].split('.'):
+                match_key = re.match(r"^(\d+)(\D+\S*)?$", version)
+                if match_key:
+                    lpps_lvl[mylist[1]]['int'].append(int(match_key.group(1)))
+                    if match_key.group(2):
+                        module.log('file {0}: got version "{1}", ignoring "{2}"'.format(lslpp_file, mylist[2], match_key.group(2)))
+                else:
+                    msg = 'file {0} is malformed'.format(lslpp_file)
+                    module.log('{0}: got version: "{1}"'.format(msg, version))
+                    results['meta']['messages'].append(msg)
+                    continue
 
     return lpps_lvl
 
@@ -1121,12 +1146,15 @@ def run_installer(module, machine, output, epkgs, resize_fs=True):
     note:
         epkgs should be results['meta']['4.2.check'] which is
         sorted against packaging date. Do not change the order.
-        Create and build results['meta']['5.install']
+        Create and build results['meta']['5.install'].
     """
     global workdir
     global results
 
     if not epkgs:
+        msg = 'Nothing to install'
+        results['satus'][machine] = 'SUCCESS'
+        output['messages'].append(msg)
         return True
 
     destpath = os.path.abspath(os.path.join(workdir))
@@ -1159,6 +1187,9 @@ def run_installer(module, machine, output, epkgs, resize_fs=True):
 
     # return error if we have nothing to install
     if not epkgs_base:
+        msg = 'Nothing to install, see syslog for details'
+        output['messages'].append(msg)
+        results['satus'][machine] = 'FAILURE'
         return False
 
     efixes = ' '.join(epkgs_base)
@@ -1176,6 +1207,7 @@ def run_installer(module, machine, output, epkgs, resize_fs=True):
             msg = 'Cannot define NIM lpp_source resource {0} for location \'{1}\''.format(lpp_source, destpath)
             module.log('[WARNING] {0}: {1}'.format(machine, msg))
             output['messages'].append(msg)
+            results['satus'][machine] = 'FAILURE'
             return False
 
     # perform customization
@@ -1197,6 +1229,7 @@ def run_installer(module, machine, output, epkgs, resize_fs=True):
             install_ok = True
 
         output.update({'5.install': stdout.splitlines()})
+        results['satus'][machine] = 'SUCCESS'
         results['changed'] = True
     else:
         msg = 'Cannot list NIM resource for \'{0}\''.format(machine)
@@ -1204,6 +1237,7 @@ def run_installer(module, machine, output, epkgs, resize_fs=True):
         module.log('[WARNING] cmd:{0} failed rc={1} stdout:{2} stderr:{3}'
                    .format(cmd, rc, stdout, stderr))
         output['messages'].append(msg)
+        results['satus'][machine] = 'FAILURE'
 
     # remove lpp source
     cmd = ['/usr/sbin/lsnim', '-l', lpp_source]
@@ -1391,7 +1425,12 @@ def main():
     results = dict(
         changed=False,
         msg='',
-        meta={'messages': []}
+        status={},
+        # status structure will be updated as follow:
+        # status={
+        #   target_name: [ SUCCESS, FAILURE ]
+        # }
+        meta={'messages': []},
         # meta structure will be updated as follow:
         # meta={
         #   target_name:{
@@ -1446,6 +1485,7 @@ def main():
     results['meta'] = {'messages': []}
     for machine in targets:
         results['meta'][machine] = {'messages': []}  # first time init
+        results['status'][machine] = ''     # first time init
 
     # Check connectivity
     targets = check_targets(module, results['meta'], targets, nim_clients)
@@ -1503,11 +1543,14 @@ def main():
         msg = 'Failed to get vulnerabilities report, {0} will not be updated'.format(machine)
         module.log('[WARNING] ' + msg)
         results['meta'][machine]['messages'].append(msg)
+        results['status'][machine] = 'FAILURE'
         targets.remove(machine)
     if check_only:
         if clean and os.path.exists(workdir):
             shutil.rmtree(workdir, ignore_errors=True)
         results['msg'] = 'exit on check only'
+        for machine in targets:
+            results['status'][machine] = 'SUCCESS'
         module.exit_json(**results)
 
     # ===========================================
@@ -1524,6 +1567,10 @@ def main():
     module.debug('*** DOWNLOAD ***')
     for machine in targets:
         run_downloader(module, machine, results['meta'][machine], results['meta'][machine]['1.parse'], resize_fs)
+        if '4.2.check' not in results['meta'][machine]:
+            msg = 'Error downloading some fixes, {0} will not be updated'.format(machine)
+            results['meta'][machine]['messages'].append(msg)
+            results['status'][machine] = 'FAILURE'
     wait_all()
 
     if download_only:
@@ -1537,15 +1584,14 @@ def main():
     # ===========================================
     module.debug('*** UPDATE ***')
     for machine in targets:
-        if not run_installer(module, machine, results['meta'][machine], results['meta'][machine]['4.2.check'], resize_fs):
-            msg = 'Failed to install fixes, please check meta and log data.'
-            results['meta'][machine]['messages'].append(msg)
+        if '4.2.check' in results['meta'][machine]:
+            run_installer(module, machine, results['meta'][machine], results['meta'][machine]['4.2.check'], resize_fs)
     wait_all()
 
     if clean and os.path.exists(workdir):
         shutil.rmtree(workdir, ignore_errors=True)
 
-    results['msg'] = 'FLRTVC completed successfully'
+    results['msg'] = 'FLRTVC completed, see status for details.'
     module.log(results['msg'])
     module.exit_json(**results)
 
