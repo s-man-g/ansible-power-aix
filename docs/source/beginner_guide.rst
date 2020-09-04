@@ -4,20 +4,18 @@
 
 -----------
 
-FINDPLACEINDOC: When we install yum, if public internet access is unavailable, you make need to create a local repo. 
-This is outside the scope in this guide, find more info at LINK.
 
-Beginners Guide
+** Beginners Guide **
 
 
 Items needed for this guide: 
 
-* A Controller Node to install ansilbe on.
+* A Controller Node on which to install ansible on.
 
 * A Managed Node(s) to apply the <NEED TO CHOOSE WHICH PLAYBOOK TO RUN>
   
    .. warning::
-      There are several os architectures/flavors to choose from when installing ansible to your controller node. AIX is not supported. It also is not an ideal choice for starting out. For this guide we will use Red Hat Enterprise Linux 7.                                        This guide has also been tested with CentOS 7. Check this link for possible controller node options: 			https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-rhel-centos-or-fedora  
+      There are several os architectures/flavors to choose from when installing ansible to your controller node. AIX is not supported. It also is not an ideal choice for starting out. For this guide we will use Red Hat Enterprise Linux 7.                                        This guide has also been tested with CentOS 7. Check this link for possible controller node options:             https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-ansible-on-rhel-centos-or-fedora  
       
 Install Ansible with:
 
@@ -49,124 +47,127 @@ To install a build from the ansible-power-aix Git repository:
 
 
   .. note:: There is a playbook LINK NEEDED to auto install python and yum on your managed nodes, however for this guide we will perform this step manually.
-	
-	**Installing yum on AIX:**
-	
-		#. Make sure rpm.rte is installed at a level of 4.13.0.10 or higher.
-			To check this run:
-				 $lslpp -la rpm.rte
-				 
-			If not installed you can download rpm.rte from"https://ftp.software.ibm.com/aix/freeSoftware/aixtoolbox/INSTALLP/rpm.rte"
-			Then install it:
-				$install –d. –acgXY rpm.rte
-			
-		#. Download yum_bundle.tar from: https://public.dhe.ibm.com/aix/freeSoftware/aixtoolbox/ezinstall/ppc/ (it's recommended to Download the latest version)
-			This bundle contains yum and all of it's dependency rpms.  Extract the yum packages from the yum_bundle.tar using tar: 
-				$tar -xvf yum_bundle.tar
-				
-			Install each of the rpm packages using the rpm command: 
-				$rpm -Uvh (packagename).rpm
-			
-		#. yum conf file:
-			yum.conf file will be installed under the path /opt/freeware/etc/yum.conf
-			By default with yum-3.4.3-1 only ppc repository is enabled.with yum-3.4.3-2 or higher version, ppc, noarch & any one of the ppc-6.1/ppc-7.1/ppc-7.2 repository is enabled.
-			If you faced ssl error while installing with yum, <baseurl> use http instead of https.
+
+**Installing yum on AIX:**
+
+    #. Make sure rpm.rte is installed at a level of 4.13.0.10 or higher.    
+
+        .. code-block:: sh
+
+            $ lslpp -la rpm.rte
+
+        If not installed you can download rpm.rte from"https://ftp.software.ibm.com/aix/freeSoftware/aixtoolbox/INSTALLP/rpm.rte"
+        Then install it:
+        $install –d. –acgXY rpm.rte
+
+    #. Download yum_bundle.tar from: https://public.dhe.ibm.com/aix/freeSoftware/aixtoolbox/ezinstall/ppc/ (it's recommended to Download the latest version)
+
+    This bundle contains yum and all of it's dependency rpms.  Extract the yum packages from the yum_bundle.tar using tar: 
+    $tar -xvf yum_bundle.tar
+
+    Install each of the rpm packages using the rpm command: 
+    $rpm -Uvh (packagename).rpm
+
+.. Leaving this out for now
+    #. yum conf file:
+    yum.conf file will be installed under the path /opt/freeware/etc/yum.conf
+    By default with yum-3.4.3-1 only ppc repository is enabled.with yum-3.4.3-2 or higher version, ppc, noarch & any one of the ppc-6.1/ppc-7.1/ppc-7.2 repository is enabled.
 
 
-	
-	**Configure our Admin User for SSH Access:**
-	
-	.. code-block:: sh
-	
-		We need to ensure our admin user can access the managed node over SSH without a password. We will set up an SSH key pair to allow this. Log onto the control node as the admin 		user and run the following command to generate an SSH key pair. Note: Just hit enter at the prompts to accept the defaults.
-			$sudo ssh-copy-id root@node_IP
-			
-	**Build your inventory:**
-	
-	.. code-block:: sh
-	
-		The inventory file can be in one of many formats, depending on the inventory plugins you have. The most common formats are INI and YAML. A basic INI etc/ansible/hosts might look 		like this: (Make sure you are logged onto the Control node as the admin user).
-			$sudo vi /etc/ansible/hosts
-			
-				If all hosts in a group share a variable value, you can apply that variable to an entire group at once. In INI:
 
-				[nimserver]
-				host1
-				host2
+**Configure our Admin User for SSH Access:**
 
-				[nimserver:vars]
-				ansible_ssh_port=22
-				ansible_ssh_user=root
-				
-		Test Connection:
-				$ansible all -u root -m ping
-				
-					host1 | SUCCESS => {
-				    	"ansible_facts": {
-				        	"discovered_interpreter_python": "/usr/bin/python"
-							}, 
-				   		 	"changed": false, 
-				    		"ping": "pong"
-							}
-				
-				
-					host2 | SUCCESS => {
-				    	"ansible_facts": {
-				        	"discovered_interpreter_python": "/usr/bin/python"
-				    		}, 
-				    			"changed": false, 
-				    			"ping": "pong"
-							}
+.. code-block:: sh
 
-		
-		Note:
-		For more information you can check: https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html
-	
-	
-	**Create your first Playbook:**
-		
-		In This example we'll use lsnim command to list the NIM clients of your NIM server:
-		
-				$sudo vi /etc/ansible/playbooks/demo_nim_check.yml
-					
-					- name: "My Playbook"
-					  hosts: 
-					  gather_facts: no
+We need to ensure our admin user can access the managed node over SSH without a password. We will set up an SSH key pair to allow this. Log onto the control node as the admin         user and run the following command to generate an SSH key pair. Note: Just hit enter at the prompts to accept the defaults.
+$sudo ssh-copy-id root@node_IP
+
+**Build your inventory:**
+
+.. code-block:: sh
+
+The inventory file can be in one of many formats, depending on the inventory plugins you have. The most common formats are INI and YAML. A basic INI etc/ansible/hosts might look         like this: (Make sure you are logged onto the Control node as the admin user).
+$sudo vi /etc/ansible/hosts
+
+If all hosts in a group share a variable value, you can apply that variable to an entire group at once. In INI:
+
+[nimserver]
+host1
+host2
+
+[nimserver:vars]
+ansible_ssh_port=22
+ansible_ssh_user=root
+
+Test Connection:
+$ansible all -u root -m ping
+
+host1 | SUCCESS => {
+        "ansible_facts": {
+            "discovered_interpreter_python": "/usr/bin/python"
+}, 
+               "changed": false, 
+            "ping": "pong"
+}
+
+
+host2 | SUCCESS => {
+        "ansible_facts": {
+            "discovered_interpreter_python": "/usr/bin/python"
+            }, 
+                "changed": false, 
+                "ping": "pong"
+}
+
+
+Note:
+For more information you can check: https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html
+
+
+**Create your first Playbook:**
+
+In This example we'll use lsnim command to list the NIM clients of your NIM server:
+
+$sudo vi /etc/ansible/playbooks/demo_nim_check.yml
+
+- name: "My Playbook"
+  hosts: 
+  gather_facts: no
   
-					  tasks:
-					    - name: "List the NIM clients of your NIM server"
-					      command: "/usr/sbin/lsnim -t standalone"
-					      register: output
+  tasks:
+    - name: "List the NIM clients of your NIM server"
+      command: "/usr/sbin/lsnim -t standalone"
+      register: output
  
-					    - debug: var=output.stdout_lines
-		
-		
-		To check your playbook Syntax:
-				$sudo ansible-playbook --syntax-check lsnim.yml
-						playbook: lsnim.yml
-				
-				
-		Run your Playbook:
-				$sudo ansible-playbook demo_nim_check.yml
-
-				PLAY [My Playbook] *************************************************************
-
-				TASK [List the NIM clients of your NIM server] *********************************
+    - debug: var=output.stdout_lines
 
 
-				TASK [debug] *******************************************************************
-				ok: [host1] => {
-				    "output.stdout_lines": [
-				        "client1     machines       standalone", 
-				        "client2     machines       standalone"
-				    ]
-				}
+To check your playbook Syntax:
+$sudo ansible-playbook --syntax-check lsnim.yml
+playbook: lsnim.yml
 
-				PLAY RECAP *********************************************************************
-				host1               : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 
-	
-	IBM Power Systems AIX Collection Documentation: https://ibm.github.io/ansible-power-aix/installation.html
+Run your Playbook:
+$sudo ansible-playbook demo_nim_check.yml
+
+PLAY [My Playbook] *************************************************************
+
+TASK [List the NIM clients of your NIM server] *********************************
+
+
+TASK [debug] *******************************************************************
+ok: [host1] => {
+    "output.stdout_lines": [
+        "client1     machines       standalone", 
+        "client2     machines       standalone"
+    ]
+}
+
+PLAY RECAP *********************************************************************
+host1               : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+
+IBM Power Systems AIX Collection Documentation: https://ibm.github.io/ansible-power-aix/installation.html
 
 
 

@@ -1,3 +1,5 @@
 {
-    "restructuredtext.confPath": "${workspaceFolder}/docs/source"
+    "restructuredtext.confPath": "${workspaceFolder}/docs/source",
+    "restructuredtext.preview.name": "docutil",
+    "python.pythonPath": "/Users/smangum/dev/ansible-power-aix/env/bin/python3"
 }
