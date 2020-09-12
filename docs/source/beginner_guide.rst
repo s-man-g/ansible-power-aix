@@ -157,13 +157,13 @@ To install a build from the ansible-power-aix Git repository:
                     [WARNING]: running playbook inside collection ibm.power_aix
                     PLAY [NIM check on AIX playbook] ***********************************************
                     TASK [AIX NIM] *****************************************************************
-                    [WARNING]: Platform aix on host 9.40.198.109 is using the discovered Python
+                    [WARNING]: Platform aix on host host1 is using the discovered Python
                     interpreter at /usr/bin/python, but future installation of another Python
                     interpreter could change this. See https://docs.ansible.com/ansible/2.9/referen
                     ce_appendices/interpreter_discovery.html for more information.
-                    ok: [9.40.198.109]
+                    ok: [host1]
                     TASK [debug] *******************************************************************
-                    ok: [9.40.198.109] => {
+                    ok: [host1] => {
                     "nim_output": {
                         "ansible_facts": {
                         "discovered_interpreter_python": "/usr/bin/python"
@@ -179,16 +179,16 @@ To install a build from the ansible-power-aix Git repository:
                             "type": "master"
                         }, 
                         "standalone": {
-                            "nimlab63": {
+                            "Client1": {
                             "cstate": "ready for a NIM operation", 
-                            "ip": "nimlab63", 
-                            "oslevel": "timedout", 
+                            "ip": "client1", 
+                            "oslevel": "7200-03-03-1914", 
                             "type": "standalone"
                             }, 
-                            "nimlab80": {
+                            "client2": {
                             "cstate": "ready for a NIM operation", 
-                            "ip": "nimlab80", 
-                            "oslevel": "timedout", 
+                            "ip": "client2", 
+                            "oslevel": "7200-03-03-1914", 
                             "type": "standalone"
                             }
                         }, 
@@ -200,12 +200,16 @@ To install a build from the ansible-power-aix Git repository:
                         "stdout": "", 
                         "stdout_lines": [], 
                         "warnings": [
-                        "Platform aix on host 9.40.198.109 is using the discovered Python interpreter at /usr/bin/python, but future installation of another Python interpreter could change this. See https://docs.ansible.com/ansible/2.9/reference_appendices/interpreter_discovery.html for more information."
+                        "Platform aix on host host1 is using the discovered Python interpreter at /usr/bin/python, but future installation of another Python interpreter could change this. See https://docs.ansible.com/ansible/2.9/reference_appendices/interpreter_discovery.html for more information."
                         ]
                     }
                     }
                     PLAY RECAP *********************************************************************
-                    9.40.198.109        : ok=2   changed=0  unreachable=0  failed=0  skipped=0  rescued=0  ignored=0    IBM Power Systems AIX Collection Documentation: https://ibm.github.io/ansible-power-aix/installation.html
+                    host1        : ok=2   changed=0  unreachable=0  failed=0  skipped=0  rescued=0  ignored=0    IBM Power Systems AIX Collection 
+                    
+                    
+               
+  Documentation: https://ibm.github.io/ansible-power-aix/installation.html
 
 
 
